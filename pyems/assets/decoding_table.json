@@ -1,0 +1,550 @@
+{
+    "devices": {
+        "08": { "name": "Kotel", "description": "Kotel GB172-24 K - MC10/UBA 4" },
+        "09": { "name": "BC20", "description": "Řídící jednotka na kotli - BC20/25" },
+        "10": { "name": "RC35", "description": "Obslužná jednotka RC30/RC35" },
+        "30": { "name": "Solar", "description": "Solární modul SM10" },
+        "0b": { "name": "DDE", "description": "Computer DDE" }
+    },
+    "frames": {
+        "02": {
+            "name": "VersionMessage",
+            "offsets": {
+                "1": { "name": "version" },
+                "2": { "name": "subversion" }
+            }
+        },
+        "06": {
+            "name": "RCTimeMessage",
+            "note": "RC35 posílá na adresu 00 každou minutu",
+            "offsets": {
+                "0": { "name": "year", "datapoint": "1048" },
+                "1": { "name": "month", "datapoint": "1047" },
+                "2": { "name": "hour", "datapoint": "1049" },
+                "3": { "name": "day", "datapoint": "1046" },
+                "4": { "name": "minute", "datapoint": "1050" },
+                "5": { "name": "second", "datapoint": "1051" },
+                "6": { "name": "weekday" },
+                "7": { "type": "f",
+                    "bits": {
+                        "0": { "name": "DST","description": "Daylight saving time" },
+                        "1": { "name": "RadioClock","description": "Radio Clock" },
+                        "2": { "name": "TimeError","description": "Time incorrect" },
+                        "3": { "name": "DateError","description": "Date incorrect" },
+                        "4": { "name": "ClockRunning","description": "Clock is running" }
+                    }
+                }
+            }
+        },
+        "07": {
+            "name": "?KotelVsem",
+            "note": "Kotel posílá na adresu 00 každou minutu 19 bytes",
+            "offsets": {}
+        },
+        "10": {
+            "name": "UBAErrorMessages1",
+            "note": "RC35 pošle každých 10 min poll a kotel odpoví - ještě prozkoumat",
+            "offsets": {
+                "0": { "type": "a","name": "err_code","description": "Display error code","length": "2" },
+                "2": { "name": "err_num","description": "Display error code","length": "2" },
+                "4": { "name": "year", "unsigned": true,"mask": "0x7f" },
+                "5": { "name": "month" },
+                "6": { "name": "hour" },
+                "7": { "name": "day" },
+                "8": { "name": "minute" },
+                "9": { "name": "second" },
+                "11": { "name": "bus_addr","description": "Bus address of the error source" }
+            }
+        },
+        "11": {
+            "name": "UBAErrorMessages2",
+            "note": "stejné jako frame 10. RC35 pošle každých 10 min poll a kotel odpoví - ještě prozkoumat",
+            "offsets": {
+                "0": { "type": "a","name": "err_code","description": "Display error code","length": "2" },
+                "2": { "name": "err_num","description": "Display error code","length": "2" },
+                "4": { "name": "year" },
+                "5": { "name": "month" },
+                "6": { "name": "hour" },
+                "7": { "name": "day" },
+                "8": { "name": "minute" },
+                "9": { "name": "second" },
+                "11": { "name": "bus_addr","description": "Bus address of the error source" }
+            }
+        },
+        "12": {
+            "name": "RCErrorMessages",
+            "offsets": {
+                "0": { "type": "a","name": "err_code","description": "Display error code","length": "2" },
+                "2": { "name": "err_num","description": "Display error code","length": "2" },
+                "4": { "name": "year" },
+                "5": { "name": "month" },
+                "6": { "name": "hour" },
+                "7": { "name": "day" },
+                "8": { "name": "minute" },
+                "9": { "name": "second" },
+                "11": { "name": "bus_addr","description": "Bus address of the error source" }
+            }
+        },
+        "13": {
+            "name": "RCDeletedErrorMessages",
+            "offsets": {}
+        },
+        "14": {
+            "name": "UBAUpTime",
+            "note": "RC35 pošle každé 2 min poll a kotel odpoví",
+            "offsets": {
+                "0": { "name": "t_sys_uptime","description": "System total operating time in minutes","unit": "min","length": "3" }
+            }
+        },
+        "15": {
+            "name": "UBAMaintenanceDate",
+            "offsets": {
+                "0": { "name": "S_maintence_message" },
+                "1": { "name": "t_before_maintenance","description": "Operating hours before maintenance in 100h","divisor": "0.1" },
+                "2": { "name": "day" },
+                "3": { "name": "month" },
+                "4": { "name": "year" }
+            }
+        },
+        "16": {
+            "name": "MC10Parameter",
+            "offsets": {
+                "0": { "name": "S_hw_activated" },
+                "1": { "name": "T_hw_setting","description": "Heating temperature setting on the boiler","unit": "°C" },
+                "2": { "name": "P_hw_out_max","description": "Boiler output max","unit": "%" },
+                "3": { "name": "P_hw_out_min","description": "Boiler output min","unit": "%" },
+                "4": { "name": "T_hyst_off","description": "Turn-off hysteresis","unit": "°C" },
+                "5": { "name": "T_hyst_on","description": "Turn-on hysteresis","unit": "°C" },
+                "6": { "name": "t_anti_comute","description": "Anti commute","unit": "min" },
+                "8": { "name": "t_pump_overrun","description": "Boiler pump overrun","unit": "min" },
+                "9": { "name": "P_pump_circ_max","description": "Boiler circuit pump modulation max. power","unit": "%" },
+                "10": { "name": "P_pump_circ_min","description": "Boiler circuit pump modulation min. power","unit": "%" }
+            }
+        },
+        "18": {
+            "name": "UBAMonitorFast",
+            "note": "kotel posílá na adresu 00 cca každých 10s (asi i při změně)",
+            "offsets": {
+                "0": { "name": "T_kotel_vyst_pozad","description": "Selected Flow Temperature","unsigned": true,"mask": "0xff","unit": "°C","datapoint": "1007" },
+                "1": { "name": "T_kotel_vyst_akt","description": "Current Flow Temperature","unit": "°C","length": "2","divisor": "10","datapoint": "1008" },
+                "3": { "name": "P_hor_pozad","description": "Selected Burning Power","unsigned": true,"mask": "0xff","unit": "%","datapoint": "1009" },
+                "4": {"name": "P_hor_akt","description": "Current Burning Power","unsigned": true,"mask": "0xff","unit": "%","datapoint": "1010" },
+                "7": { "type": "f", "length": "1",
+                    "bits": {
+                        "0": { "name": "S_hor","description": "Burning Gas (flame)","datapoint": "1011" },
+                        "2": { "name": "S_vent","description": "Fan Working","datapoint": "1012" },
+                        "3": { "name": "S_zap","description": "Ignition","datapoint": "1013" },
+                        "5": { "name": "S_oc","description": "Heating Pump Working","datapoint": "1014" },
+                        "6": { "name": "S_3cv","description": "DHW Heating","datapoint": "1015" },
+                        "7": {"name": "S_hw_cirk","description": "DHW Circuling" }
+                    }
+                },
+                "9": { "name": "??T_DL-Erhizer","missing": "0x8000","unit": "°C","length": "2","divisor": "10" },
+                "11": { "name": "T_boiler_stred","description": "T_boiler_stred","unit": "°C","length": "2","divisor": "10","datapoint": "1000" },
+                "13": { "name": "T_zpatecka","description": "Current Flow Return Temperature","missing": "0x8000","unit": "°C","length": "2","divisor": "10" },
+                "15": { "name": "I_ionizacni","description": "Flame current","unit": "µA","length": "2","divisor": "10","datapoint": "1019" },
+                "17": { "name": "p_tlak","description": "System Pressure","unsigned": true,"mask": "0xff","missing": "0xff","unit": "bar","divisor": "10" },
+                "18": { "type": "a","name": "A_serv_kod","description": "Service code","length": "2","datapoint": "1023" },
+                "20": { "type": "a","name": "A_err_kod","description": "Error code","length": "2","datapoint": "1024" },
+                "25": { "name": "T_privod","description": "Ansauglufttemperatur","unit": "°C","length": "2","divisor": "10" }
+            }
+        },
+        "19": {
+            "name": "UBAMonitorSlow",
+            "note": "tohle vypadá, že to samo nechodí",
+            "offsets": {
+                "0": { "name": "T_venkovni","description": "External Temperature","unit": "°C","length": "2","divisor": "10","datapoint": "1031" },
+                "2": { "name": "T_boiler","description": "Boiler Current Temperature","missing": "0x8000","unit": "°C","length": "2","divisor": "10" },
+                "4": { "name": "T_kourovod","description": "Exhaust gas temperature","missing": "0x8000","unit": "°C","length": "2","divisor": "10" },
+                "9": { "name": "?P_pump_modulation","description": "Pump Modulation DHW","unit": "%" },
+                "10": { "name": "C_hor_start","description": "Burner Start Counter","length": "3" },
+                "13": { "name": "t_hor_min","description": "Burner Working Minutes","unit": "min","length": "3" },
+                "16": { "name": "t_hor_min2","description": "Burner Working Minutes stage 2","unit": "min","length": "3" },
+                "19": { "name": "t_top_min","description": "Heating Working Minutes","unit": "min","length": "3" },
+                "22": { "name": "t_dalsi_min","description": "Another time","unit": "min","length": "3" }
+            }
+        },
+        "1a": {
+            "name": "UBASettings",
+            "note": "RC35 posílá kotli každou minutu",
+            "offsets": {
+                "0": { "name": "T_kotel_pozad","description": "Kessel-Solltemperatur","unsigned": true,"mask": "0xff","unit": "°C","datapoint": "1027" },
+                "1": { "name": "P_top_pozad","description": "?0 oder 100 Leistungsanforderung HK (?)","unsigned": true,"mask": "0xff","unit": "%","datapoint": "1028" },
+                "2": { "name": "P_hw_pozad","description": "0 oder 100 Leistungsanforderung WW (?)","unsigned": true,"mask": "0xff","unit": "%","datapoint": "1029" }
+            }
+        },
+        "1c": {
+            "name": "UBAMaintenanceMessages",
+            "note": "kotel posílá na adresu 00 každou minutu",
+            "offsets": {
+                "5": { "name": "S_maintenance_due","description": "Maintenance due" }
+            }
+        },
+        "1d": {
+            "name": "UBAFunctionTest",
+            "offsets": {
+                "0": { "name": "S_testmode","description": "Test mode" },
+                "1": { "name": "P_hor_vystup","description": "Burner output","unit": "%" },
+                "3": { "name": "P_oc","description": "Boiler pump performance","unit": "%" },
+                "4": { "name": "S_3cv","description": "3-cestný ventil 0:topení, 255: voda" }
+            }
+        },
+        "1e": {
+            "name": "WM10Status",
+            "offsets": {
+                "0": { "name": "T_WM10","unit": "°C","length": "2","divisor": "10" }
+            }
+        },
+        "29": {
+            "name": "29",
+            "note": "RC35 posílá na adresu 09 (BC20) každých 10 minut a zařízení 09 odpoví hodnotou 00",
+            "offsets": {
+                "0": { "name": "S_BC" }
+            }
+        },
+        "2a": {
+            "name": "2a",
+            "note": "Kotel posílá na adresu 00 každých 10 vteřin",
+            "offsets": {
+                "0": { "name": "S_BC" }
+            }
+        },
+        "33": {
+            "name": "UBAParameterHW",
+            "offsets": {
+                "0": { "name": "S_hw_available","description": "HW system available" },
+                "1": { "name": "S_hw_activated","description": "HW activated" },
+                "2": { "name": "T_hw_desired","description": "Hot Water Desired Temperature","unsigned": true,"mask": "0xff","unit": "°C","datapoint": "1035" },
+                "6": { "name": "S_circ_available","description": "HW circulation available" },
+                "7": { "name": "S_circ_switching","description": "HW switching circulation" },
+                "8": { "name": "T_hw_des","description": "Thermal Disinfection Temperature","unsigned": true,"mask": "0xff","unit": "°C","datapoint": "1036" },
+                "10": { "name": "S_hw_type","description": "HW system type" }
+            }
+        },
+        "34": {
+            "name": "UBAMonitorHW",
+            "note": "kotel posílá na adresu 00 každých 10s",
+            "offsets": {
+                "0": { "name": "T_hw_pozad","description": "Selected DHW Temperature","unsigned": true,"mask": "0xff","unit": "°C","datapoint": "1025" },
+                "1": { "name": "T_hw_akt","description": "Current DHW Temperature","unit": "°C","length": "2","divisor": "10" },
+                "3": { "name": "T_hw_senzor_2","description": "Warmwasser Temperatur Ist 2. Fühler","unit": "°C","length": "2","divisor": "10" },
+                "5": { "type": "f",
+                    "bits": {
+                        "0": { "name": "S_hw_denni_rezim","description": "Day Mode DHW" },
+                        "1": { "name": "S_hw_ohrev_extra","description": "DHW Once","datapoint": "1037" },
+                        "2": { "name": "S_des","description": "Thermal Disinfection DHW","datapoint": "1038" },
+                        "3": { "name": "S_hw_ohrev","description": "Prepare DHW","datapoint": "1039" },
+                        "4": { "name": "Warmwassernachladung" },
+                        "5": { "name": "S_hw_OK" }
+                    }
+                },
+                "6": { "type": "f",
+                    "bits": {
+                        "0": { "name": "E_vadny_snimac_1" },
+                        "1": { "name": "E_vadny_snimac_2" },
+                        "2": { "name": "E_hw" },
+                        "3": { "name": "E_des" }
+                    }
+                },
+                "7": {
+                    "type": "f",
+                    "length": "1",
+                    "bits": {
+                        "0": { "name": "S_cirkulace_denni" },
+                        "1": { "name": "S_cirkulace_rucni" },
+                        "2": { "name": "S_cirkulace" },
+                        "3": { "name": "S_hw_ohrev" }
+                    }
+                },
+                "8": { "name": "Art des Warmwassersystems s.u." },
+                "9": { "name": "V_hw_prutok","unit": "l/min","divisor": "10" },
+                "10": { "name": "t_hw_ohrev","description": "DHW Working Minutes","unit": "min","length": "3" },
+                "13": { "name": "C_hw_ohrev","description": "DHW Start Counter","length": "3" }
+            }
+        },
+        "35": {
+            "name": "HWFlags",
+            "note": "RC35 posílá kotli každou minutu 1, Solar pak vždy po dalších 30s pošle 0",
+            "offsets": {
+                "0": { "name": "F_hw_ohrev","description": "DHW Once 39=start, 7(3)=stop" }
+            }
+        },
+        "37": {
+            "name": "HWOperatingMode",
+            "offsets": {
+                "0": { "name": "S_hw_program","description": "HW podle topení: 0, vlastní: 255" },
+                "1": { "name": "S_cirkulace_program","description": "HW podle HW: 0, vlastní: 255" },
+                "2": { "name": "S_hw_mode","description": "0-off, 1-on, 2-auto" },
+                "3": { "name": "S_cirkulace_mode","description": "0: off, 1: on, 2: auto" },
+                "4": { "name": "S_des","description": "0: off, 255: on" },
+                "5": { "name": "S_des_den","description": "Den v týdnu pro desinfekci" },
+                "6": { "name": "S_des_hodina","description": "Hodina pro desinfekci" },
+                "8": { "name": "S_des_teplota","description": "Teplota pro desinfekci","unit": "°C" },
+                "9": { "name": "S_hw_rucni_ohrev","description": "HW once charge button" }
+            }
+        },
+        "38": {
+            "name": "HWSwitchingTimes",
+            "offsets": {}
+        },
+        "39": {
+            "name": "HWCircSwitchingTimes",
+            "offsets": {}
+        },
+        "3d": {
+            "name": "HC1OperatingMode",
+            "offsets": {
+                "0": { "name": "S_hc1_typ","description": "Typ topení 1-radiátor,2-konvektor,3-podlahové,4-vzduch" },
+                "1": { "name": "T_hc1_noc","description": "HC1 teplota noční režim","unit": "°C","divisor": "2","unsigned": true,"mask": "0xff","datapoint": "1017" },
+                "2": { "name": "T_hc1_den","description": "HC1 teplota denní režim","unit": "°C","divisor": "2","unsigned": true,"mask": "0xff","datapoint": "1021" },
+                "3": { "name": "T_hc1_dovolena","description": "HC1 teplota režim dovolená","unit": "°C","divisor": "2","unsigned": true,"mask": "0xff","datapoint": "1026" },
+                "4": { "name": "T_hc1_vliv","description": "HC1 vliv teploty v místnosti","unit": "°C","divisor": "2" },
+                "6": { "name": "T_hc1_offset","description": "HC1 offset teploty","unit": "°C","divisor": "2" },
+                "7": { "name": "S_hc1_mode","description": "0-night, 1-day, 2-auto","unsigned": true,"mask": "0xff","datapoint": "1034" },
+                "8": { "name": "S_hc1_vysouseni","description": "0-off, 255-on" },
+                "15": { "name": "T_hc1_out_max","description": "HC1 maximální výstupní teplota","unit": "°C" },
+                "16": { "name": "T_hc1_out_min","description": "HC1 minimální výstupní teplota","unit": "°C" },
+                "17": { "name": "T_hc1_out","description": "HC1 konstrukční teplota","unit": "°C" },
+                "19": { "name": "S_hc1_opt_prog","description": "Optimalizační program 0-off, 255-on" },
+                "22": { "name": "T_hc1_leto_zima","description": "HC1 přepínání léto/zima","unit": "°C" },
+                "23": { "name": "T_hc1_mraz","description": "HC1 ochrana proti mrazu","unit": "°C" },
+                "25": { "name": "S_hc1_rezim","description": "Provozní režim 0-shutdown, 1-Reduced Operation, 2-Room Setback, 3-Outdoor Setback" },
+                "26": { "name": "S_hc1_ovladani","description": "Dálkové ovládání 0-žádné, 1-RC20, 2-RC3x" },
+                "28": { "name": "S_hc1_mraz","description": "Ochrana proti mrazu 0-žádná, 1-venkovní teplota, 2-pokojová teplota 5 °C" },
+                "32": { "name": "S_hc1_typ_x","description": "Typ topení 1-radiátor,2-konvektor,3-podlahové" },
+                "33": { "name": "S_hc1_typ_rizeni","description": "Typ řízení 0-podle venkovní teploty,1-podle teploty místnosti" },
+                "35": { "name": "T_hc1_out_max2","description": "HC1 maximální výstupní teplota","unit": "°C" },
+                "36": { "name": "T_hc1_out2","description": "HC1 konstrukční teplota","unit": "°C" },
+                "37": { "name": "T_hc1_docasna","description": "HC1 dočasná pokojová teplota","unit": "°C","divisor": "2" },
+                "38": { "name": "T_hc1_snizena","description": "HC1 snížená teplota","unit": "°C" },
+                "39": { "name": "T_hc1_zruseni_snizeni_n","description": "HC1 venkovní teplota pro přerušení snížení normální provoz","unit": "°C" },
+                "40": { "name": "T_hc1_zruseni_snizeni_d","description": "HC1 venkovní teplota pro přerušení snížení režim dovolená","unit": "°C" },
+                "41": { "name": "S_hc1_snizeni","description": "Snížení v režimu dovolená 2-Raumhaltebetrieb,3-Aussenhaltebetrieb" }
+            }
+        },
+        "3e": {
+            "name": "HC1MonitorMessage",
+            "note": "RC35 pošle na adresu 00 každou 1 min",
+            "offsets": {
+                "0": { "type": "f",
+                    "bits": {
+                        "0": { "name": "Ausschaltoptimierung" },
+                        "1": { "name": "Einschaltoptimierung" },
+                        "2": { "name": "Automatikbetrieb" },
+                        "3": { "name": "WW-Vorrang" },
+                        "4": { "name": "Estrichtrocknung" },
+                        "5": { "name": "S_rezim_dovolena","description": "Holiday Mode","datapoint": "1052" },
+                        "6": { "name": "S_protimrazova_ochrana" },
+                        "7": { "name": "Manuell" }
+                    }
+                },
+                "1": { "type": "f",
+                    "bits": {
+                        "0": { "name": "S_rezim_letni","description": "Summer Mode","datapoint": "1030" },
+                        "1": { "name": "S_rezim_denni","description": "Day Mode","datapoint": "1022" },
+                        "2": { "name": "keine Kommunikation mit FB (?)" },
+                        "3": { "name": "FB fehlerhaft (?)" },
+                        "4": { "name": "Fehler Vorlauffühler (?)" },
+                        "5": { "name": "maximaler Vorlauf" },
+                        "6": { "name": "externer Störeingang (?)" },
+                        "7": { "name": "S_rezim_party_pause","description": "Party Pause Mode","datapoint": "1053" }
+                    }
+                },
+                "2": { "name": "T_ref_mistnost_pozad","description": "Desired Room Temperature","unsigned": true,"mask": "0xff","unit": "°C","divisor": "2","datapoint": "1016" },
+                "3": { "name": "T_ref_mistnost_akt","unit": "°C","length": "2","divisor": "10","datapoint": "1001" },
+                "5": { "name": "Einschaltoptimierungszeit","unit": "min" },
+                "6": { "name": "Ausschaltoptimierungszeit","unit": "min" },
+                "7": { "name": "Heizkreis1 Heizkurve 10°C","unit": "°C" },
+                "8": { "name": "Heizkreis1 Heizkurve 0°C","unit": "°C" },
+                "9": { "name": "Heizkreis1 Heizkurve -10°C","unit": "°C" },
+                "10": { "name": "Raumtemperatur-Änderungsgeschwindigkeit","unit": "K/min","length": "2","divisor": "100" },
+                "12": { "name": "Von diesem Heizkreis angeforderte Kesselleistung","unit": "%" },
+                "13": { "type": "f",
+                    "bits": {
+                        "0": { "name": "Schaltzustand ???" },
+                        "1": { "name": "Schaltzustand ???" },
+                        "2": { "name": "Schaltzustand Party" },
+                        "3": { "name": "Schaltzustand Pause" },
+                        "4": { "name": "Schaltzustand ???" },
+                        "5": { "name": "Schaltzustand ???" },
+                        "6": { "name": "Schaltzustand Urlaub" },
+                        "7": { "name": "Schaltzustand Ferien" }
+                    }
+                },
+                "14": { "name": "Berechnete Solltemperatur Vorlauf","unit": "°C" },
+                "15": { "type": "f",
+                    "bits": {
+                        "1": { "name": "keine Raumtemperatur" },
+                        "2": { "name": "keine Absenkung" },
+                        "3": { "name": "Heizbetrieb an BC10 abgeschaltet" }
+                    }        
+                }
+            }
+        },
+        "3f": {
+            "name": "HC1SwitchingTimes1",
+            "offsets": {
+                "87": { "name": "Start Holidays Day", "datapoint": "1040" },
+                "88": { "name": "Start Holidays Month", "datapoint": "1041" },
+                "89": { "name": "Start Holidays Year", "datapoint": "1042" },
+                "90": { "name": "End Holidays Day", "datapoint": "1043" },
+                "91": { "name": "End Holidays Month", "datapoint": "1044" },
+                "92": { "name": "End Holidays Year", "datapoint": "1045" }
+            }
+        },
+        "42": {
+            "name": "HC1SwitchingTimes2",
+            "offsets": {}
+        },
+        "47": {
+            "name": "HC2OperatingMode",
+            "offsets": {}
+        },
+        "48": {
+            "name": "HC2MonitorMessage",
+            "offsets": {}
+        },
+        "49": {
+            "name": "HC2SwitchingTimes1",
+            "offsets": {}
+        },
+        "4c": {
+            "name": "HC2SwitchingTimes2",
+            "offsets": {}
+        },
+        "51": {
+            "name": "HC3OperatingMode",
+            "offsets": {}
+        },
+        "52": {
+            "name": "HC3MonitorMessage",
+            "offsets": {}
+        },
+        "53": {
+            "name": "HC3SwitchingTimes1",
+            "offsets": {}
+        },
+        "56": {
+            "name": "HC3SwitchingTimes2",
+            "offsets": {}
+        },
+        "5b": {
+            "name": "HC4OperatingMode",
+            "offsets": {}
+        },
+        "5c": {
+            "name": "HC4MonitorMessage",
+            "offsets": {}
+        },
+        "5d": {
+            "name": "HC3SwitchingTimes1",
+            "offsets": {}
+        },
+        "60": {
+            "name": "HC4SwitchingTimes2",
+            "offsets": {}
+        },
+        "96": {
+            "name": "SMParameter",
+            "offsets": {}
+        },
+        "97": {
+            "name": "SMMonitor",
+            "note": "Solar posílá na adresu 00 každou minutu",
+            "offsets": {
+                "2": { "name": "T_kolektor","unit": "°C","length": "2","divisor": "10","datapoint": "1003" },
+                "4": { "name": "P_sc","description": "Výkon solární čerpadlo","unsigned": true,"mask": "0xff","unit": "%","datapoint": "1004" },
+                "5": { "name": "T_boiler_dole","unit": "°C","length": "2","divisor": "10","datapoint": "1006" },
+                "7": { "type": "f",
+                    "bits": {
+                        "1": { "name": "S_sc","description": "Solární čerpadlo on/off","datapoint": "1005" }
+                    }
+                },
+                "8": { "name": "t_solar","description": "Celkový čas provozu solárního modulu","unit": "min","length": "3" }
+            }
+        },
+        "9b": {
+            "name": "WMParameter1",
+            "offsets": {}
+        },
+        "9c": {
+            "name": "WMStatus2",
+            "offsets": {}
+        },
+        "9d": {
+            "name": "WMParameter2",
+            "offsets": {}
+        },
+        "a2": {
+            "name": "a2",
+            "note": "RC35 posílá na adresu 00 každé 4 minuty (samé nuly)",
+            "offsets": {}
+        },
+        "a3": {
+            "name": "RCTempMessage",
+            "note": "RC35 posílá na adresu 00 každou minutu",
+            "offsets": {
+                "0": { "name": "T_out_tlum","description":"Tlumená venkovní teplota","unsigned": true,"mask": "0xff","unit": "°C", "datapoint": "1002" },
+                "1": { "name": "T_flag1","description":"Flag 1","unit": "°C" },
+                "2": { "name": "T_flag2","description":"Flag 2","unit": "°C" },
+                "3": { "name": "T_raum_ist","description":"Raum-ist","unit": "°C","length": "2","divisor": "10" },
+                "5": { "name": "T_temp1","description":"Temperature 1","unit": "°C","length": "2","divisor": "10" },
+                "7": { "name": "T_temp2","description":"Temperature 2","unit": "°C","length": "2","divisor": "10" },
+                "9": { "type": "a","name": "T_sensor1","description":"?Sensor 1","length": "2" },
+                "11": { "type": "a","name": "T_sensor2","description":"?Sensor 2","length": "2" }
+            }
+        },
+        "a4": {
+            "name": "RCContactDates",
+            "offsets": {}
+        },
+        "a5": {
+            "name": "RCSystemParameters",
+            "offsets": {}
+        },
+        "aa": {
+            "name": "MMParameter1",
+            "offsets": {}
+        },
+        "ab": {
+            "name": "MMStatus",
+            "offsets": {}
+        },
+        "ac": {
+            "name": "MMParameter2",
+            "offsets": {}
+        },
+        "ae": {
+            "name": "RCStatusMessage",
+            "offsets": {}
+        },
+        "e0": {
+            "name": "IrrigationStatusMessage",
+            "note": "Arduino pošle při změne, jinak na dotaz. Je to FAKE EMS message.",
+            "offsets": {
+                "0": { "type": "f",
+                    "bits": {
+                        "0": { "name": "S_valves","description": "1-some valve is on otherwise 0","datapoint": "2000" },
+                        "1": { "name": "S_valve_1","description": "Ventil 1","datapoint": "2001" },
+                        "2": { "name": "S_valve_2","description": "Ventil 2","datapoint": "2002" },
+                        "3": { "name": "S_valve_3","description": "Ventil 3","datapoint": "2003" },
+                        "4": { "name": "S_valve_4","description": "Ventil 4","datapoint": "2004" },
+                        "5": { "name": "S_valve_5","description": "Ventil 5","datapoint": "2005" }
+                    }
+                }
+            }
+        },
+        "f0": {
+            "name": "IrrigationComponentsCommunication",
+            "note": "Fake datapoints for irrigation components communication.",
+            "offsets": {
+                "0": { "name": "S_irrigation_program_in_progress","description":"Probíhá program zavlažování","datapoint": "2100" },
+                "1": { "name": "S_irrigation_program_request","description":"Požadavek na vypnutí/zapnutí programu zavlažování","datapoint": "2101" },
+                "2": { "name": "S_irrigation_program_1_in_progress","description":"Probíhá program 1 zavlažování","datapoint": "2110" },
+                "3": { "name": "S_irrigation_program_1_request","description":"Požadavek na vypnutí/zapnutí programu 1 zavlažování","datapoint": "2111" },
+                "4": { "name": "S_irrigation_program_1_in_progress","description":"Probíhá program 2 zavlažování","datapoint": "2120" },
+                "5": { "name": "S_irrigation_program_1_request","description":"Požadavek na vypnutí/zapnutí programu 2 zavlažování","datapoint": "2121" }
+            }
+        }
+    }
+}
