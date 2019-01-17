@@ -1,17 +1,37 @@
-import serial
+import binascii
 import configparser
 import json
 import logging
+import threading
+import queue
 from enum import Enum
-from .util import ascii_hex_to_string
+
+import serial
+
+from .util import ascii_hex_to_string, calculate_crc
 
 
 class Response(Enum):
     EMS = 0xF4
     GATEWAY = 0xA0
 
+
+class GatewayReponse(Enum):
+    SUCCESS = 0
+    FAILURE = 1
+    INVALID = 2
+    CRC_ERROR = 3
+    DATA_ERROR = 4
+    REQUEST_NOT_CONFIRMED = 5
+    REQUEST_NOT_VERIFIED = 6
+    SEND_TIMEOUT = 7
+    SEND_VERIFICATION_ERROR = 8
+    UNSPECIFIED_ERROR = 9
+
+
 class EmsError(Exception):
     pass
+
 
 class Ems:
     def __init__(self,
@@ -20,6 +40,7 @@ class Ems:
                  open_port=True):
         self._port = serial.Serial()
         self._is_open = False
+        self._read_queue = queue.Queue()
 
         self._load_config(config_filename)
         self._load_decoding_table(decoding_table_filename)
@@ -156,15 +177,74 @@ class Ems:
                 offset += 1
                 continue
 
-            val_list, item_len = self._decode_value(frame, data, data_pos)
+            val_list, item_len = self._decode_value(frame, data[4:], data_pos)
             decoded_values.extend(val_list)
 
             offset += item_len
 
         for frame_entry, value in decoded_values:
-            self._logger.debug(f'Decoded: {frame_entry}. Value: {value}')
+            self._logger.debug(
+                f'Decoded({frame["name"]}): {frame_entry}. Value: {value}')
 
         return decoded_values
+
+    def _read(self, raw=False, resp_type=Response.EMS):
+        if not self._is_open:
+            return None
+
+        # return from read-queue if not empty
+        self._read_queue.empty()
+        if resp_type == Response.EMS:
+            try:
+                item = self._read_queue.get_nowait()
+                self._logger.debug('Returning EMS response from READ_QUEUE')
+                return item
+            except queue.Empty:
+                pass
+
+        data_pos = 1
+        done = False
+        while not done:
+            try:
+                data_len = ord(self._port.read())
+                data = self._port.read(data_len)
+            except serial.serialutil.SerialException:
+                self._logger.error('Serial error during read (disconnected?)')
+                self.close()
+                raise EmsError('Serial read error (disconnected?)')
+
+            decoded_values = []
+
+            self._logger.debug(f'RAW RECEIVED DATA: {data}')
+            if data_len > 0 and data_len == len(data):
+                if raw:
+                    return data
+
+                if data[0] == Response.EMS.value and data_len >= 8:
+                    decoded_values = self._decode_frame(data[data_pos:])
+                    if resp_type == Response.EMS:
+                        return decoded_values
+                    else:  # polling for gateway response => store EMS response to queue to be read later
+                        self._read_queue.put(decoded_values)
+                elif data[0] == Response.GATEWAY.value:
+                    self._logger.debug(f'Gateway response: {data[data_pos:]}')
+                    if resp_type == Response.GATEWAY:
+                        return data[data_pos:]
+                    else:
+                        self._logger.warn(
+                            'Received gateway response in regular EMS read.')
+                else:
+                    self._logger.warn('Unknown data received.')
+            else:
+                raise EmsError('Received data length mismatch.')
+
+    def _send_cmd(self, cmd):
+        length = (len(cmd) + 1).to_bytes(1, byteorder='big')
+        crc = calculate_crc(cmd).to_bytes(1, byteorder='big')
+        msg = length + cmd + crc
+
+        self._logger.debug('Writing to GW: {}'.format(binascii.hexlify(msg)))
+        self._port.write(msg)
 
     def open(self):
         """Open the serial port. Throw SerialException if failed."""
@@ -174,7 +254,8 @@ class Ems:
                 self._is_open = True
                 self._logger.debug(f'Serial port {self._port.port} opened.')
             except serial.SerialException:
-                self._logger.error(f'Could not open serial port {self._port.port}')
+                self._logger.error(
+                    f'Could not open serial port {self._port.port}')
                 raise EmsError(f'Could not open serial port {self._port.port}')
 
     def close(self):
@@ -183,27 +264,26 @@ class Ems:
             self._is_open = False
             self._logger.debug(f'Serial port {self._port.port} closed.')
 
-    def read(self, raw=False, datapoints_only=False):
-        if not self._is_open:
+    def get_ems_command(self, name):
+        try:
+            cmd = self._config.get('commands', name)
+            return bytearray.fromhex(cmd)
+        except configparser.NoOptionError:
+            self._logger.warn(f'Command {name} does not exist.')
+            return None
+        except configparser.NoSectionError:
+            self._logger.error(
+                'Could not find "commands" section in the config file.')
             return None
 
-        data_pos = 1
-        data_len = ord(self._port.read())
-        data = self._port.read(data_len)
-        decoded_values = []
+    def read(self, raw=False):
+        return self._read(raw, Response.EMS)
 
-        if data_len > 0 and data_len == len(data):
-            if raw:
-                return data
+    def write(self, cmd):
+        self._send_cmd(cmd)  # send command
 
-            if data[0] == Response.EMS.value and data_len >= 8:
-                decoded_values = self._decode_frame(data[data_pos:])
-            else:
-                self._logger.warn('Unknown data received.')
+        # wait for gateway response
+        resp = self._read(raw=False, resp_type=Response.GATEWAY)
+        self._logger.debug(f'write: got GATEWAY response: {resp}')
 
-            return decoded_values
-        else:
-            raise EmsError('Received data length mismatch.')
-
-    def write(self):
-        pass
+        return resp[1], resp[2]  # return GatewayResponse, optional data
