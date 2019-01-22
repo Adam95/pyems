@@ -1,4 +1,5 @@
 def calculate_crc(buffer):
+    """Calculate CRC of the given buffer."""
     crc = 0
     for byte in buffer:
         d = 0
@@ -12,6 +13,7 @@ def calculate_crc(buffer):
 
 
 def ascii_hex_to_string(ascii_hex):
+    """Convert ASCII HEX to string."""
     hex_result = ''
     text_result = ''
     for b in ascii_hex:

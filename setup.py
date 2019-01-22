@@ -8,7 +8,7 @@ with open('README.rst') as f:
 setup(
     name='pyems',
     version='0.0.1',
-    description='Simple interface for reading and writing to the EMS_ bus via an Arduino',
+    description='Simple interface for reading and writing to the EMS bus via an Arduino',
     long_description=long_description,
     author='Adam Podroužek',
     author_email='podroada@fit.cvut.cz',

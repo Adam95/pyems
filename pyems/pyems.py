@@ -2,8 +2,8 @@ import binascii
 import configparser
 import json
 import logging
-import threading
 import queue
+import threading
 from enum import Enum
 
 import serial
@@ -12,11 +12,13 @@ from .util import ascii_hex_to_string, calculate_crc
 
 
 class Response(Enum):
+    """Serial message types."""
     EMS = 0xF4
     GATEWAY = 0xA0
 
 
 class GatewayReponse(Enum):
+    """Gateway response message types."""
     SUCCESS = 0
     FAILURE = 1
     INVALID = 2
@@ -30,14 +32,18 @@ class GatewayReponse(Enum):
 
 
 class EmsError(Exception):
+    """EMS Error exception subclass."""
     pass
 
 
 class Ems:
+    """PyEMS class for accessing the EMS bus via Arduino gateway."""
+
     def __init__(self,
                  config_filename='pyems/assets/default.cfg',
                  decoding_table_filename='pyems/assets/decoding_table.json',
                  open_port=True):
+        """Initialize port, load config and decoding table."""
         self._port = serial.Serial()
         self._is_open = False
         self._read_queue = queue.Queue()
@@ -49,9 +55,11 @@ class Ems:
             self.open()
 
     def __del__(self):
+        """Destroy the current EMS instance."""
         self.close()
 
     def _create_logger(self, log_level, log_format, date_format):
+        """Create an internal logger instance."""
         self._logger = logging.getLogger('pyems_logger')
         self._logger.setLevel(log_level)
 
@@ -62,8 +70,10 @@ class Ems:
         handler.setFormatter(formatter)
 
         self._logger.addHandler(handler)
+        self._logger.propagate = False
 
     def _load_config(self, filename):
+        """Load configuration file, initialize logger and port."""
         self._config = configparser.ConfigParser()
         try:
             with open(filename, 'r') as f:
@@ -89,6 +99,7 @@ class Ems:
             raise e
 
     def _load_decoding_table(self, filename):
+        """Load the EMS frame decoding table."""
         try:
             with open(filename, encoding='utf-8') as f:
                 self._decoding_table = json.load(f)
@@ -98,6 +109,7 @@ class Ems:
             raise e
 
     def _decode_value(self, frame, data, offset):
+        """Decode one value from a frame on a given offset. If the value type is 'f' (flag), return array of decoded flags."""
         str_offset = str(offset)
         frame_offsets = frame['offsets']
         decoded_values = []
@@ -116,11 +128,13 @@ class Ems:
 
         value_buf = data[offset:offset + value_len]
         if item_type == 'n':  # number
+            # check unsigned attribute
             if 'unsigned' in frame_offsets[str_offset]:
                 unsigned = frame_offsets[str_offset]['unsigned']
             else:
                 unsigned = False
 
+            # decode the value from bytes
             value = int.from_bytes(value_buf, 'big', signed=not unsigned)
             value_unsigned = int.from_bytes(value_buf, 'big')
             if 'mask' in frame_offsets[str_offset]:
@@ -154,6 +168,7 @@ class Ems:
         return decoded_values, value_len
 
     def _decode_frame(self, data):
+        """Decode one frame. Return all decoded values."""
         data_len = len(data)
         sender = format(data[0], '02x')
         receiver_raw = format(data[1], '02x')
@@ -184,11 +199,12 @@ class Ems:
 
         for frame_entry, value in decoded_values:
             self._logger.debug(
-                f'Decoded({frame["name"]}): {frame_entry}. Value: {value}')
+                f'Decoded({frame["name"]}): {frame_entry}. [VALUE={value}]')
 
         return decoded_values
 
     def _read(self, raw=False, resp_type=Response.EMS):
+        """Read a single frame and return the decoded values."""
         if not self._is_open:
             return None
 
@@ -208,8 +224,9 @@ class Ems:
             try:
                 data_len = ord(self._port.read())
                 data = self._port.read(data_len)
-            except serial.serialutil.SerialException:
-                self._logger.error('Serial error during read (disconnected?)')
+            except serial.serialutil.SerialException as e:
+                self._logger.error(
+                    f'Serial error during read (disconnected?): {e}')
                 self.close()
                 raise EmsError('Serial read error (disconnected?)')
 
@@ -239,6 +256,7 @@ class Ems:
                 raise EmsError('Received data length mismatch.')
 
     def _send_cmd(self, cmd):
+        """Write request to the serial port."""
         length = (len(cmd) + 1).to_bytes(1, byteorder='big')
         crc = calculate_crc(cmd).to_bytes(1, byteorder='big')
         msg = length + cmd + crc
@@ -259,12 +277,14 @@ class Ems:
                 raise EmsError(f'Could not open serial port {self._port.port}')
 
     def close(self):
+        """Close the serial port."""
         if self._is_open:
             self._port.close()
             self._is_open = False
             self._logger.debug(f'Serial port {self._port.port} closed.')
 
     def get_ems_command(self, name):
+        """Get byte-represented EMS command from a given name."""
         try:
             cmd = self._config.get('commands', name)
             return bytearray.fromhex(cmd)
@@ -276,10 +296,16 @@ class Ems:
                 'Could not find "commands" section in the config file.')
             return None
 
+    def get_config(self):
+        """Get the internal config object."""
+        return self._config
+
     def read(self, raw=False):
+        """Read one EMS frame and return decoded values."""
         return self._read(raw, Response.EMS)
 
     def write(self, cmd):
+        """Write the given command to the EMS and wait for a gateway (Arduino) response."""
         self._send_cmd(cmd)  # send command
 
         # wait for gateway response
