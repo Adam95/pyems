@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 
-with open('README.rst') as f:
+with open('README.md') as f:
     long_description = ''.join(f.readlines())
 
 
@@ -28,15 +28,9 @@ setup(
         'Topic :: Utilities',
     ],
     install_requires=[
-        'pyserial'
+        'pyserial',
+        'pytest'
     ],
-    setup_requires=['pytest-runner'],
-    tests_require=['pytest'],
-    entry_points={
-        # 'console_scripts': [
-        #     'pyems = pyems:main',
-        # ]
-    },
     package_data={
         'pyems': ['assets/*']
     },

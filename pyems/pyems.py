@@ -42,9 +42,10 @@ class Ems:
     def __init__(self,
                  config_filename='pyems/assets/default.cfg',
                  decoding_table_filename='pyems/assets/decoding_table.json',
-                 open_port=True):
+                 open_port=True,
+                 test_mode=False):
         """Initialize port, load config and decoding table."""
-        self._port = serial.Serial()
+        self._test_mode = test_mode
         self._is_open = False
         self._read_queue = queue.Queue()
 
@@ -75,11 +76,17 @@ class Ems:
     def _load_config(self, filename):
         """Load configuration file, initialize logger and port."""
         self._config = configparser.ConfigParser()
+        self._logger = None
         try:
             with open(filename, 'r') as f:
                 self._config.read_file(f)
 
-            self._port.port = self._config['serial']['port_name']
+            if self._test_mode:
+                self._port = serial.serial_for_url('loop://', do_not_open=True)
+            else:
+                self._port = serial.Serial()
+                self._port.port = self._config['serial']['port_name']
+
             self._port.baudrate = int(self._config['serial']['baud_rate'])
 
             level = self._config['logging_ems']['level']
@@ -91,7 +98,7 @@ class Ems:
 
             self._logger.debug('Config loaded.')
         except Exception as e:
-            if self._logger:
+            if self._logger is not None:
                 self._logger.critical('Failed to load EMS config file.')
             else:
                 print('Failed to load EMS config file.')
@@ -289,7 +296,7 @@ class Ems:
             cmd = self._config.get('commands', name)
             return bytearray.fromhex(cmd)
         except configparser.NoOptionError:
-            self._logger.warn(f'Command {name} does not exist.')
+            self._logger.warning(f'Command {name} does not exist.')
             return None
         except configparser.NoSectionError:
             self._logger.error(
